@@ -1,51 +1,74 @@
-import React, {Component} from 'react';
+import React, {useState, useEffect} from 'react';
 import api from '../../services/api';
 import { Link } from 'react-router-dom';
 
 import './styles.css';
 
-class Main extends Component {
-    state = {
-        products: [],
-        productInfo: {},
-        page: 1,
-    }
+function Main(){
 
-    componentDidMount(){
-        this.loadProducts();
-    }
+    const [products, setProducts] = useState([]);
+    const [productInfo, setProductInfo] = useState({});
+    const [page, setPage] = useState(1);
 
-    loadProducts = async (page = 1) => {
-        const response = await api.get(`/products?page=${page}`);
+    useEffect(() => {
+        api.get(`/products?page=${page}`).then((res) => {
+            
+            const  {docs, ...rest}  = res.data;
+            // console.log(docs);
+            setProducts(docs);
 
-        const  { docs, ...productInfo } = response.data;
+            // console.log(rest);
+            setProductInfo(rest);
+        });
 
-        this.setState({ products: docs, productInfo, page });
-    };
+    }, []);
 
-    prevPage = () => {
-        const { page } = this.state;
+    const prevPage = () => {
 
         if (page === 1) return;
 
         const pageNumber = page - 1;
 
-        this.loadProducts(pageNumber);
+        setPage(pageNumber);
+
+        api.get(`/products?page=${pageNumber}`).then((res) => {
+            
+            const  {docs, ...rest}  = res.data;
+            // console.log(docs);
+            setProducts(docs);
+
+            // console.log(rest);
+            setProductInfo(rest);
+        });
+
+        // this.loadProducts(pageNumber);
     }
 
-    nextPage = () => {
-        const { page, productInfo } = this.state;
+     const nextPage = () => {
 
-        if (page === productInfo.pages) return;
+        if (page === productInfo.page) return;
+
+        // console.log('Page '+productInfo.page);
 
         const pageNumber = page + 1;
 
-        this.loadProducts(pageNumber)
+        // console.log(pageNumber);
+
+        setPage(pageNumber);
+
+        api.get(`/products?page=${pageNumber}`).then((res) => {
+            
+            const  {docs, ...rest}  = res.data;
+            // console.log(docs);
+            setProducts(docs);
+
+            // console.log(rest);
+            setProductInfo(rest);
+        });
+
+        // this.loadProducts(pageNumber)
     }
-
-    render(){
-        const { products, page, productInfo } = this.state;
-
+    
         return(
             <div className="product-list">
                 {products.map(product => (
@@ -58,16 +81,15 @@ class Main extends Component {
                 ))}
 
                 <div className="actions">
-                    <button disabled={page === 1} onClick={this.prevPage}>
+                    <button disabled={page === 1} onClick={prevPage}>
                         Anterior
                     </button>
-                    <button disabled={page === productInfo.pages} onClick={this.nextPage}>
+                    <button disabled={page === productInfo.pages} onClick={nextPage}>
                         Próximo
                     </button>
                 </div>
             </div>
         );
     }
-}
 
 export default Main;
